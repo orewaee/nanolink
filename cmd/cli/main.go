@@ -8,13 +8,18 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/orewaee/nanolink/internal/core/driving"
 	"github.com/orewaee/nanolink/internal/datasource/disk"
 	delivery "github.com/orewaee/nanolink/internal/delivery/redirect"
+	"github.com/orewaee/nanolink/internal/gen"
 	"github.com/orewaee/nanolink/internal/usecase"
 	"github.com/urfave/cli/v3"
 )
 
 func main() {
+	dir := "."
+	linkApi := usecase.NewLinkService(&disk.YamlLinkRepo{Dir: dir + "/links"})
+
 	cmd := &cli.Command{
 		Name: "nanolink",
 		Commands: []*cli.Command{
@@ -33,7 +38,7 @@ func main() {
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							port := cmd.Int("port")
 							log.Println("REDIRECT PORT", port)
-							runRedirectDelivery(port)
+							runRedirectDelivery(port, linkApi)
 							return nil
 						},
 					},
@@ -47,6 +52,40 @@ func main() {
 					},
 				},
 			},
+			{
+				Name: "add",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name: "id",
+					},
+				},
+				ArgsUsage: "<location>",
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					id := cmd.String("id")
+					if id == "" {
+						provider := gen.NewAlphabeticIdProvider()
+						generated, err := provider.GenerateId(ctx, 8)
+						if err != nil {
+							return err
+						}
+
+						id = generated
+					}
+
+					location := cmd.Args().First()
+					if location == "" {
+						return cli.Exit("location is required", 1)
+					}
+
+					link, err := linkApi.AddLink(ctx, id, location)
+					if err != nil {
+						return err
+					}
+
+					fmt.Println(link)
+					return nil
+				},
+			},
 		},
 	}
 
@@ -55,8 +94,7 @@ func main() {
 	}
 }
 
-func runRedirectDelivery(port int) {
-	linkApi := usecase.NewLinkService(&disk.YamlLinkRepo{Dir: "links"})
+func runRedirectDelivery(port int, linkApi driving.LinkApi) {
 	controller := delivery.NewHttpRedirectController(port, linkApi)
 
 	fmt.Printf("running redirect delivery on :%d\n", port)

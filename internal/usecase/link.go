@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/orewaee/nanolink/internal/core/domain"
 	"github.com/orewaee/nanolink/internal/core/driven/repo"
@@ -13,7 +14,13 @@ type LinkService struct {
 }
 
 func (s *LinkService) AddLink(ctx context.Context, id string, location string) (domain.Link, error) {
-	return s.linkRepo.GetLinkById(ctx, id)
+	link := domain.Link{
+		Id:        id,
+		Location:  location,
+		CreatedAt: time.Now(),
+	}
+
+	return link, s.linkRepo.AddLink(ctx, link)
 }
 
 func (s *LinkService) GetLinkById(ctx context.Context, id string) (domain.Link, error) {

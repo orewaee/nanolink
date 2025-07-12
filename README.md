@@ -1,10 +1,10 @@
 # Nanolink
 
 
-## CLI
+## CLI commands
 
-| Command                  | Description            |
-| ------------------------ | ---------------------- |
-| `nanolink run redirect`  | Start redirect server  |
-| `nanolink run dashboard` | Start dashboard server |
+#### `nanolink run [--port <port>] redirect`
 
+#### `nanolink run [--port <port>] dashboard`
+
+#### `nanolink add [--id <id>] <location>`
