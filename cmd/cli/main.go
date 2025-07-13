@@ -143,8 +143,6 @@ func runRedirectDelivery(
 	}
 
 	controller := delivery.NewHttpRedirectController(linkApi, opts...)
-
-	fmt.Printf("running redirect delivery on %s:%d\n", host, port)
 	go controller.Run()
 
 	exit := make(chan os.Signal, 1)

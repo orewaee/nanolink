@@ -28,7 +28,9 @@ func NewHttpRedirectController(
 	}
 
 	for _, opt := range opts {
-		opt(&controller.redirectOpts)
+		if err := opt(&controller.redirectOpts); err != nil {
+			panic(err)
+		}
 	}
 
 	return controller
@@ -73,11 +75,18 @@ func (controller *HttpRedirectController) Run() error {
 
 	opts := controller.redirectOpts
 
-	addr := fmt.Sprintf("%s:%d", opts.Host, opts.Port)
+	host := opts.Host
+	if opts.HostType == domain.IPv6 {
+		host = fmt.Sprintf("[%s]", host)
+	}
+
+	addr := fmt.Sprintf("%s:%d", host, opts.Port)
 	controller.httpServer = &http.Server{
 		Addr:    addr,
 		Handler: mux,
 	}
+
+	fmt.Printf("running redirect delivery on %s\n", addr)
 
 	if opts.TLS {
 		err := controller.httpServer.ListenAndServeTLS(opts.CertFile, opts.KeyFile)
