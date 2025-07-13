@@ -31,9 +31,8 @@ func (r *YamlLinkRepo) AddLink(ctx context.Context, link domain.Link) error {
 	}
 
 	data, err := yaml.Marshal(&model.Link{
-		Id:        link.Id,
-		Location:  link.Location,
-		CreatedAt: link.CreatedAt,
+		Id:       link.Id,
+		Location: link.Location,
 	})
 	if err != nil {
 		return err

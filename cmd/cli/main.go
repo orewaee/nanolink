@@ -27,18 +27,24 @@ func main() {
 				Name: "run",
 				Flags: []cli.Flag{
 					&cli.IntFlag{
-						Name:  "port",
-						Value: 2222,
-						Usage: "nanolink instance port",
+						Name:     "port",
+						Value:    2222,
+						Required: false,
+					},
+					&cli.StringFlag{
+						Name:     "host",
+						Value:    "127.0.0.1",
+						Required: false,
 					},
 				},
 				Commands: []*cli.Command{
 					{
 						Name: "redirect",
 						Action: func(ctx context.Context, cmd *cli.Command) error {
+							host := cmd.String("host")
 							port := cmd.Int("port")
-							log.Println("REDIRECT PORT", port)
-							runRedirectDelivery(port, linkApi)
+							addr := fmt.Sprintf("%s:%d", host, port)
+							runRedirectDelivery(ctx, addr, linkApi)
 							return nil
 						},
 					},
@@ -82,7 +88,7 @@ func main() {
 						return err
 					}
 
-					fmt.Println(link)
+					fmt.Printf("/%s -> %s\n", link.Id, link.Location)
 					return nil
 				},
 			},
@@ -94,10 +100,10 @@ func main() {
 	}
 }
 
-func runRedirectDelivery(port int, linkApi driving.LinkApi) {
-	controller := delivery.NewHttpRedirectController(port, linkApi)
+func runRedirectDelivery(ctx context.Context, addr string, linkApi driving.LinkApi) {
+	controller := delivery.NewHttpRedirectController(addr, linkApi)
 
-	fmt.Printf("running redirect delivery on :%d\n", port)
+	fmt.Printf("running redirect delivery on %s\n", addr)
 	go controller.Run()
 
 	exit := make(chan os.Signal, 1)
@@ -106,5 +112,5 @@ func runRedirectDelivery(port int, linkApi driving.LinkApi) {
 	<-exit
 
 	fmt.Println("shutting down redirect delivery...")
-	controller.Shutdown(context.Background())
+	controller.Shutdown(ctx)
 }

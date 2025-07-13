@@ -3,7 +3,6 @@ package delivery
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/orewaee/nanolink/internal/core/domain"
@@ -12,14 +11,14 @@ import (
 )
 
 type HttpRedirectController struct {
-	port       int
+	addr       string
 	httpServer *http.Server
 	linkApi    driving.LinkApi
 }
 
-func NewHttpRedirectController(port int, linkApi driving.LinkApi) delivery.Controller {
+func NewHttpRedirectController(addr string, linkApi driving.LinkApi) delivery.Controller {
 	return &HttpRedirectController{
-		port:    port,
+		addr:    addr,
 		linkApi: linkApi,
 	}
 }
@@ -46,7 +45,7 @@ func (controller *HttpRedirectController) Run() error {
 	})
 
 	controller.httpServer = &http.Server{
-		Addr:    fmt.Sprintf(":%d", controller.port),
+		Addr:    controller.addr,
 		Handler: mux,
 	}
 

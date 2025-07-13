@@ -2,7 +2,6 @@ package domain
 
 import (
 	"errors"
-	"time"
 )
 
 var (
@@ -12,7 +11,6 @@ var (
 )
 
 type Link struct {
-	Id        string
-	Location  string
-	CreatedAt time.Time
+	Id       string
+	Location string
 }
