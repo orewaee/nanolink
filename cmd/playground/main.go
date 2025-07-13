@@ -1,17 +1,24 @@
 package main
 
 import (
-	"context"
 	"fmt"
-
-	"github.com/orewaee/nanolink/internal/core/driven/repo"
-	"github.com/orewaee/nanolink/internal/datasource/disk"
+	"net/http"
 )
 
 func main() {
-	var linkRepo repo.LinkRepo
-	linkRepo = &disk.YamlLinkRepo{
-		Dir: "links",
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pong"))
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := &http.Server{
+		Addr:    "127.0.0.1:4000",
+		Handler: mux,
 	}
-	fmt.Println(linkRepo.GetLinkById(context.TODO(), "github"))
+
+	err := server.ListenAndServeTLS("certs/cert.crt", "certs/private.key")
+	if err != nil {
+		fmt.Println(err)
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/orewaee/nanolink/internal/core/domain"
 	"github.com/orewaee/nanolink/internal/core/driving"
 	"github.com/orewaee/nanolink/internal/datasource/disk"
 	delivery "github.com/orewaee/nanolink/internal/delivery/redirect"
@@ -36,6 +37,21 @@ func main() {
 						Value:    "127.0.0.1",
 						Required: false,
 					},
+					&cli.BoolFlag{
+						Name:     "tls",
+						Value:    false,
+						Required: false,
+					},
+					&cli.StringFlag{
+						Name:     "cert-file",
+						Value:    "",
+						Required: false,
+					},
+					&cli.StringFlag{
+						Name:     "key-file",
+						Value:    "",
+						Required: false,
+					},
 				},
 				Commands: []*cli.Command{
 					{
@@ -43,8 +59,16 @@ func main() {
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							host := cmd.String("host")
 							port := cmd.Int("port")
-							addr := fmt.Sprintf("%s:%d", host, port)
-							runRedirectDelivery(ctx, addr, linkApi)
+
+							certFile := cmd.String("cert-file")
+							keyFile := cmd.String("key-file")
+							tls := cmd.Bool("tls")
+							if !tls {
+								certFile = ""
+								keyFile = ""
+							}
+
+							runRedirectDelivery(ctx, host, port, tls, certFile, keyFile, linkApi)
 							return nil
 						},
 					},
@@ -100,10 +124,27 @@ func main() {
 	}
 }
 
-func runRedirectDelivery(ctx context.Context, addr string, linkApi driving.LinkApi) {
-	controller := delivery.NewHttpRedirectController(addr, linkApi)
+func runRedirectDelivery(
+	ctx context.Context,
+	host string,
+	port int,
+	tls bool,
+	certFile string,
+	keyFile string,
+	linkApi driving.LinkApi,
+) {
+	opts := []domain.RedirectOpt{
+		domain.WithHost(host),
+		domain.WithPort(port),
+	}
 
-	fmt.Printf("running redirect delivery on %s\n", addr)
+	if tls {
+		opts = append(opts, domain.WithTLS(certFile, keyFile))
+	}
+
+	controller := delivery.NewHttpRedirectController(linkApi, opts...)
+
+	fmt.Printf("running redirect delivery on %s:%d\n", host, port)
 	go controller.Run()
 
 	exit := make(chan os.Signal, 1)
