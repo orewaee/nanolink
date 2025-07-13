@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/orewaee/nanolink/internal/core/domain"
@@ -51,6 +52,17 @@ func (controller *HttpRedirectController) Run() error {
 
 		switch {
 		case errors.Is(err, domain.ErrLinkNotFound):
+			if controller.redirectOpts.NotFoundTempl {
+				templ, err := template.ParseFiles("templates/404.templ")
+				if err != nil {
+					writer.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+
+				templ.Execute(writer, nil)
+				return
+			}
+
 			writer.WriteHeader(http.StatusNotFound)
 			return
 		default:

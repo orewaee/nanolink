@@ -29,7 +29,6 @@ go.work.sum
 # Sensitive files and directories
 /certs
 /links
-/templates
 
 # System files
 .DS_Store
