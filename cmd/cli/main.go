@@ -116,6 +116,27 @@ func main() {
 					return nil
 				},
 			},
+			{
+				Name: "remove",
+				Arguments: []cli.Argument{
+					&cli.StringArg{
+						Name: "id",
+					},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					id := cmd.StringArg("id")
+					if id == "" {
+						return cli.Exit("id is required", 1)
+					}
+
+					if err := linkApi.RemoveLinkById(ctx, id); err != nil {
+						return err
+					}
+
+					fmt.Printf("%s removed\n", id)
+					return nil
+				},
+			},
 		},
 	}
 

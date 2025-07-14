@@ -46,7 +46,7 @@ type RedirectOpts struct {
 	// Example: "/etc/ssl/private/server.key" or "key.pem"
 	KeyFile string
 
-	/// NotFoundTempl enables rendering a custom HTML template for 404 responses
+	// NotFoundTempl enables rendering a custom HTML template for 404 responses
 	// when a requested link is not found, instead of a plain text error.
 	//
 	// Default: true
