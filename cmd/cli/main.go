@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,7 +12,9 @@ import (
 	"github.com/orewaee/nanolink/internal/datasource/disk"
 	delivery "github.com/orewaee/nanolink/internal/delivery/redirect"
 	"github.com/orewaee/nanolink/internal/gen"
+	"github.com/orewaee/nanolink/internal/logger"
 	"github.com/orewaee/nanolink/internal/usecase"
+	"github.com/phuslu/log"
 	"github.com/urfave/cli/v3"
 )
 
@@ -76,7 +77,7 @@ func main() {
 						Name: "dashboard",
 						Action: func(ctx context.Context, cmd *cli.Command) error {
 							port := cmd.Int("port")
-							log.Println("DASHBOARD PORT", port)
+							fmt.Println("DASHBOARD PORT", port)
 							return nil
 						},
 					},
@@ -141,7 +142,7 @@ func main() {
 	}
 
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
 
@@ -163,6 +164,7 @@ func runRedirectDelivery(
 		opts = append(opts, domain.WithTLS(certFile, keyFile))
 	}
 
+	logger.Init()
 	controller := delivery.NewHttpRedirectController(linkApi, opts...)
 	go controller.Run()
 
@@ -171,6 +173,6 @@ func runRedirectDelivery(
 
 	<-exit
 
-	fmt.Println("shutting down redirect delivery...")
+	log.Info().Msgf("shutting down redirect delivery...")
 	controller.Shutdown(ctx)
 }

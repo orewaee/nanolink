@@ -10,6 +10,8 @@ import (
 	"github.com/orewaee/nanolink/internal/core/domain"
 	"github.com/orewaee/nanolink/internal/core/driving"
 	"github.com/orewaee/nanolink/internal/delivery"
+	"github.com/orewaee/nanolink/internal/delivery/middleware"
+	"github.com/phuslu/log"
 )
 
 type HttpRedirectController struct {
@@ -57,6 +59,7 @@ func (controller *HttpRedirectController) Run() error {
 			if controller.redirectOpts.NotFoundTempl {
 				templ, err := template.ParseFiles("templates/404.templ")
 				if err != nil {
+					log.Error().Err(err).Stack()
 					writer.WriteHeader(http.StatusInternalServerError)
 					return
 				}
@@ -65,6 +68,7 @@ func (controller *HttpRedirectController) Run() error {
 				return
 			}
 
+			log.Error().Err(err).Stack().Msg("")
 			writer.WriteHeader(http.StatusNotFound)
 			return
 		default:
@@ -83,10 +87,10 @@ func (controller *HttpRedirectController) Run() error {
 	addr := fmt.Sprintf("%s:%d", host, opts.Port)
 	controller.httpServer = &http.Server{
 		Addr:    addr,
-		Handler: mux,
+		Handler: middleware.NewLoggerMiddleware().Use(mux),
 	}
 
-	fmt.Printf("running redirect delivery on %s\n", addr)
+	log.Info().Msgf("running redirect delivery on %s\n", addr)
 
 	if opts.TLS {
 		err := controller.httpServer.ListenAndServeTLS(opts.CertFile, opts.KeyFile)
